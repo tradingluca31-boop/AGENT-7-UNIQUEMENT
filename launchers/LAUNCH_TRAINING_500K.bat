@@ -29,16 +29,10 @@ cd /d "C:\Users\lbye3\Desktop\GoldRL"
 REM Set Python path to include necessary directories
 set PYTHONPATH=%PYTHONPATH%;C:\Users\lbye3\Desktop\GoldRL;C:\Users\lbye3\Desktop\GoldRL\src;C:\Users\lbye3\Desktop\GoldRL\AGENT_V2
 
-REM Copy training environment to project root if needed (so imports work)
-if not exist "C:\Users\lbye3\Desktop\GoldRL\AGENT_V2\trading_env_v2_ultimate.py" (
-    echo [WARNING] trading_env_v2_ultimate.py not found in AGENT_V2, copying...
-    copy "C:\Users\lbye3\Desktop\GoldRL\AGENT\AGENT 7\ENTRAINEMENT\FICHIER IMPORTANT AGENT 7\trading_env_v2_ultimate.py" "C:\Users\lbye3\Desktop\GoldRL\AGENT_V2\"
-)
-
-REM Run training from the centralized folder
+REM Run training from the organized structure
 echo [START] Launching training...
 echo.
-python "C:\Users\lbye3\Desktop\GoldRL\AGENT\AGENT 7\ENTRAINEMENT\FICHIER IMPORTANT AGENT 7\train_CRITIC_BOOST_LSTM.py"
+python "C:\Users\lbye3\Desktop\GoldRL\AGENT\AGENT 7\ENTRAINEMENT\FICHIER IMPORTANT AGENT 7\training\train_CRITIC_BOOST_LSTM.py"
 
 echo.
 echo ================================================================================

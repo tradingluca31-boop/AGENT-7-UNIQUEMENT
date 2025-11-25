@@ -13,8 +13,8 @@ echo   [4] No mode collapse
 echo.
 echo ================================================================================
 
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
-python smoke_test_MINI.py
+python tests\smoke_test_MINI.py
 
 pause

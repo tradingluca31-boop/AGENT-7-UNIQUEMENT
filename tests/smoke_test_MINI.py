@@ -15,16 +15,18 @@ import sys
 from pathlib import Path
 
 project_root = Path("C:/Users/lbye3/Desktop/GoldRL")
+parent_dir = Path(__file__).resolve().parent.parent  # FICHIER IMPORTANT AGENT 7
 sys.path.append(str(project_root))
 sys.path.append(str(project_root / 'src'))
 sys.path.append(str(project_root / 'AGENT_V2'))
+sys.path.append(str(parent_dir))  # For organized subdirectories
 
 import numpy as np
 from collections import Counter
 import config
 from data_loader import DataLoader
 from feature_engineering import FeatureEngineering
-from trading_env_v2_ultimate import GoldTradingEnv
+from environment.trading_env_v2_ultimate import GoldTradingEnv
 from stable_baselines3 import PPO
 
 print("="*60)

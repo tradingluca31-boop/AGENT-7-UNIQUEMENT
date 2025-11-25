@@ -32,11 +32,13 @@ Expected performance: Sharpe 2.5+, Max DD <6%, ROI 18%+, Critic Std >1.0
 import sys
 from pathlib import Path
 
-# Add project root
+# Add project root and parent directory
 project_root = Path("C:/Users/lbye3/Desktop/GoldRL")
+parent_dir = Path(__file__).resolve().parent.parent  # FICHIER IMPORTANT AGENT 7
 sys.path.append(str(project_root))
 sys.path.append(str(project_root / 'src'))
 sys.path.append(str(project_root / 'AGENT_V2'))
+sys.path.append(str(parent_dir))  # For organized subdirectories
 
 import numpy as np
 import pandas as pd
@@ -45,7 +47,7 @@ import config
 
 from data_loader import DataLoader
 from feature_engineering import FeatureEngineering
-from trading_env_v2_ultimate import GoldTradingEnv
+from environment.trading_env_v2_ultimate import GoldTradingEnv
 
 # CRITIC BOOST: Use RecurrentPPO instead of PPO
 from sb3_contrib import RecurrentPPO
@@ -54,10 +56,10 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 
 # CHECKPOINT EVALUATION: Import custom callback for CSV saving
-from CheckpointEvaluationCallback import CheckpointEvaluationCallback
+from callbacks.CheckpointEvaluationCallback import CheckpointEvaluationCallback
 
 # INTERPRETABILITY: Import interview callback to understand agent behavior
-from InterpretabilityCallback import InterpretabilityCallback
+from callbacks.InterpretabilityCallback import InterpretabilityCallback
 
 print("="*80)
 print("[SUCCESS] AGENT 7 V2.1 CRITIC BOOST + LSTM - WALL STREET GRADE")
