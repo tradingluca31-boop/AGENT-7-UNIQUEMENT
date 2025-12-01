@@ -1,0 +1,749 @@
+{
+  "agent_info": {
+    "name": "Agent 7 V2.1 - CRITIC BOOST + LSTM",
+    "version": "2.1",
+    "repository": "https://github.com/tradingluca31-boop/AGENT-7-UNIQUEMENT",
+    "type": "Reinforcement Learning Trading Agent",
+    "asset": "XAUUSD",
+    "timeframe": "H1",
+    "algorithm": "RecurrentPPO",
+    "last_update": "2025-12-01",
+    "status": "Production Ready"
+  },
+  "rules_critical": {
+    "work_mode": "GITHUB_ONLY",
+    "file_policy": "MODIFY_ONLY",
+    "versioning": "SINGLE_FILE_PER_TYPE",
+    "memory_optimization": "NO_DUPLICATION",
+    "instructions": [
+      "MODIFIER UNIQUEMENT - Ne jamais créer de nouveaux fichiers/versions",
+      "UN SEUL FICHIER par type - Pas de duplication",
+      "TRAVAIL SUR GITHUB - Pas en local, toujours via GitHub",
+      "ÉCONOMIE MÉMOIRE - Un fichier = une version modifiable"
+    ]
+  },
+  "repository_structure": {
+    "analysis": {
+      "path": "analysis/",
+      "description": "Analyse SHAP et explicabilité",
+      "files": [
+        {
+          "name": "explain_shap_agent7.py",
+          "purpose": "Feature importance via SHAP, 500 samples, visualisations",
+          "modify_only": true
+        }
+      ]
+    },
+    "callbacks": {
+      "path": "callbacks/",
+      "description": "Callbacks d'entraînement",
+      "files": [
+        {
+          "name": "CheckpointEvaluationCallback.py",
+          "purpose": "Évaluation tous les 50K steps, génère CSV stats/trades + RANKING",
+          "modify_only": true
+        },
+        {
+          "name": "InterpretabilityCallback.py",
+          "purpose": "Interview agent tous les 50K steps (6 questions)",
+          "modify_only": true
+        }
+      ]
+    },
+    "docs": {
+      "path": "docs/",
+      "description": "Documentation",
+      "files": []
+    },
+    "environment": {
+      "path": "environment/",
+      "description": "Environnement RL",
+      "files": [
+        {
+          "name": "trading_env_v2_ultimate.py",
+          "purpose": "Environnement 229 features, reward hiérarchique, FTMO compliance",
+          "modify_only": true
+        }
+      ]
+    },
+    "launchers": {
+      "path": "launchers/",
+      "description": "Scripts batch de lancement",
+      "files": [
+        {
+          "name": "LAUNCH_TRAINING_500K.bat",
+          "purpose": "Lance entraînement 500K steps"
+        },
+        {
+          "name": "RUN_SMOKE_TEST_MINI.bat",
+          "purpose": "Lance smoke test rapide (100 steps)"
+        }
+      ]
+    },
+    "tests": {
+      "path": "tests/",
+      "description": "Tests de validation",
+      "files": [
+        {
+          "name": "smoke_test_MINI.py",
+          "purpose": "Test rapide 100 steps, validation action balance + position management",
+          "modify_only": true
+        },
+        {
+          "name": "smoke_test_agent7.py",
+          "purpose": "Test complet 1000 steps, 4 phases validation",
+          "modify_only": true
+        }
+      ]
+    },
+    "training": {
+      "path": "training/",
+      "description": "Scripts d'entraînement",
+      "files": [
+        {
+          "name": "train_CRITIC_BOOST_LSTM.py",
+          "purpose": "Script principal entraînement RecurrentPPO + LSTM",
+          "modify_only": true
+        }
+      ]
+    }
+  },
+  "architecture": {
+    "algorithm": "RecurrentPPO",
+    "policy": "MlpLstmPolicy",
+    "actor": {
+      "layers": [256, 256],
+      "architecture": "separate_independent"
+    },
+    "critic": {
+      "layers": [256, 256],
+      "architecture": "separate_independent"
+    },
+    "lstm": {
+      "neurons": 256,
+      "layers": 1,
+      "memory_steps": 16,
+      "critic_lstm_enabled": true
+    }
+  },
+  "hyperparameters_v2_1": {
+    "learning_rate": {
+      "min": 5e-6,
+      "max": 1e-5,
+      "type": "adaptive"
+    },
+    "training": {
+      "total_steps": 500000,
+      "duration_estimate": "~2 hours",
+      "batch_size": 64,
+      "rollout_length": 2048,
+      "epochs_per_update": 25,
+      "epochs_v2_0": 15,
+      "improvement": "+67%"
+    },
+    "ppo_specific": {
+      "gamma": 0.9549945651081264,
+      "gae_lambda": 0.95,
+      "gae_lambda_v2_0": 0.9576,
+      "clipping_range": 0.2,
+      "max_gradient_norm": 0.5
+    },
+    "value_function": {
+      "value_coefficient": 1.0,
+      "value_coefficient_v2_0": 0.25,
+      "boost_multiplier": "4x",
+      "critical_fix": "Solves Critic Flat problem"
+    },
+    "entropy": {
+      "initial": 0.2,
+      "final": 0.05,
+      "schedule": {
+        "phase_1": {
+          "progress": "0-30%",
+          "entropy": 0.2,
+          "mode": "exploration"
+        },
+        "phase_2": {
+          "progress": "30-70%",
+          "entropy": "exponential_decay",
+          "decay_rate": 2.5
+        },
+        "phase_3": {
+          "progress": "70-100%",
+          "entropy": 0.05,
+          "mode": "exploitation"
+        }
+      }
+    },
+    "callbacks": {
+      "checkpoint_frequency": 50000,
+      "evaluation_frequency": 10000,
+      "evaluation_episodes": 5,
+      "interpretability_frequency": 50000
+    }
+  },
+  "features": {
+    "total": 229,
+    "base_features": {
+      "count": 209,
+      "categories": {
+        "oscillators": ["RSI_14", "Stochastic_K", "Williams_R", "CCI", "MFI", "ROC"],
+        "trend": ["MACD", "MACD_Signal", "ADX", "Trend_Strength"],
+        "volatility": ["ATR_14", "BB_Width", "Volatility_Percentile"],
+        "volume": ["Volume_Ratio"],
+        "other": "196 additional technical features"
+      }
+    },
+    "rl_features": {
+      "count": 13,
+      "list": [
+        {
+          "name": "Last Action",
+          "type": "one-hot",
+          "dimensions": 3,
+          "values": ["SELL", "HOLD", "BUY"]
+        },
+        {
+          "name": "Regret Signal",
+          "dimensions": 1,
+          "description": "Opportunités manquées"
+        },
+        {
+          "name": "Position Duration Normalized",
+          "dimensions": 1
+        },
+        {
+          "name": "Unrealized PnL Ratio",
+          "dimensions": 1
+        },
+        {
+          "name": "Market Regime",
+          "type": "one-hot",
+          "dimensions": 3,
+          "values": ["ranging", "trending", "volatile"]
+        },
+        {
+          "name": "Hours Until Macro Event",
+          "dimensions": 1
+        },
+        {
+          "name": "Volatility Percentile",
+          "dimensions": 1
+        },
+        {
+          "name": "Position Side Normalized",
+          "dimensions": 1
+        },
+        {
+          "name": "Trade Similarity Score",
+          "dimensions": 1,
+          "description": "Pattern recognition vs winners/losers"
+        }
+      ]
+    },
+    "memory_features": {
+      "count": 7,
+      "introduced_in": "V2.1",
+      "list": [
+        {
+          "name": "Recent Win Rate",
+          "window": "20 last trades"
+        },
+        {
+          "name": "Win/Loss Streak",
+          "window": "current"
+        },
+        {
+          "name": "Average PnL",
+          "window": "20 last trades"
+        },
+        {
+          "name": "Best Trade",
+          "window": "20 last trades"
+        },
+        {
+          "name": "Worst Trade",
+          "window": "20 last trades"
+        },
+        {
+          "name": "Win Count",
+          "window": "20 last trades"
+        },
+        {
+          "name": "Loss Count",
+          "window": "20 last trades"
+        }
+      ]
+    }
+  },
+  "reward_function": {
+    "type": "hierarchical_tiered",
+    "tiers": {
+      "tier_1_core_trading": {
+        "weight": 0.7,
+        "components": {
+          "profit": {
+            "weight": 0.4,
+            "formula": "(equity - initial_balance) / initial_balance"
+          },
+          "sharpe_ratio": {
+            "weight": 0.2,
+            "formula": "returns.mean() / returns.std() × √252"
+          },
+          "drawdown_penalty": {
+            "weight": 0.1,
+            "formula": "-max_drawdown × 5.0"
+          }
+        }
+      },
+      "tier_2_risk_management": {
+        "weight": 0.2,
+        "components": {
+          "ftmo_compliance": {
+            "weight": 0.1,
+            "rules": {
+              "dd_below_10_percent": 1.0,
+              "dd_7_to_10_percent": 0.5,
+              "dd_violated": 0.0
+            }
+          },
+          "var_95_management": {
+            "weight": 0.05,
+            "description": "Penalty increases with absolute VaR"
+          },
+          "tail_risk_control": {
+            "weight": 0.05,
+            "kurtosis_threshold": 3.0
+          }
+        }
+      },
+      "tier_3_behavioral_shaping": {
+        "weight": 0.1,
+        "bonuses": {
+          "direction_prediction": 0.02,
+          "profit_taking": {
+            "min": 0.05,
+            "max": 0.2
+          },
+          "loss_cutting": 0.03,
+          "completion": 0.1
+        }
+      }
+    },
+    "adaptive_multiplier": {
+      "min": 0.5,
+      "max": 2.0,
+      "based_on": "recent_performance"
+    },
+    "final_formula": "(Tier1 + Tier2 + Tier3) × Adaptive_Multiplier"
+  },
+  "risk_management": {
+    "compliance": "FTMO",
+    "rules": {
+      "max_risk_per_trade": {
+        "value": 0.01,
+        "description": "1.0%",
+        "sizing": "Kelly optimized: 0.33%-1.0% adaptive"
+      },
+      "daily_loss_limit": {
+        "value": 0.02,
+        "description": "2%",
+        "behavior": "Blocks new trades or terminates episode"
+      },
+      "max_drawdown": {
+        "value": 0.1,
+        "description": "10%",
+        "behavior": "Terminates episode immediately"
+      },
+      "emergency_stop_training": {
+        "value": 0.2,
+        "description": "20%",
+        "behavior": "Force-close position"
+      },
+      "emergency_stop_production": {
+        "value": 0.095,
+        "description": "9.5%",
+        "behavior": "Force-close position"
+      },
+      "risk_reduction_zone": {
+        "min": 0.07,
+        "max": 0.1,
+        "description": "7%-10% DD",
+        "multiplier": "Progressive: 1.0× → 0.0×"
+      },
+      "recovery_threshold": {
+        "value": 0.055,
+        "description": "<5.5% DD",
+        "behavior": "Resume normal risk exposure"
+      }
+    },
+    "dynamic_risk_multiplier": {
+      "dd_below_7": 1.0,
+      "dd_7_to_10": "max(0, 1.0 - (DD - 7%)/3%)",
+      "dd_above_10": 0.0
+    },
+    "position_sizing_formula": {
+      "risk_amount": "Balance × Base_Risk × Confidence × Risk_Multiplier",
+      "position_size": "Risk_Amount / (ATR × ATR_Multiplier × Contract_Size)"
+    },
+    "confidence_threshold": {
+      "base_normal": 0.6,
+      "base_high_dd": 0.7,
+      "modulation": "±5%",
+      "based_on": "Trade Similarity Score",
+      "range": [0.05, 0.85],
+      "note": "Permissive during training"
+    }
+  },
+  "advanced_features": {
+    "trade_quality_memory": {
+      "name": "WALL STREET V3",
+      "captures": "15 entry features per trade",
+      "features": ["RSI", "MACD", "ATR", "ADX", "etc"],
+      "comparison": "Top 25 winners + 25 losers",
+      "scoring": "Cosine similarity",
+      "identifies": "Pattern-based missed opportunities"
+    },
+    "missed_opportunities_tracking": {
+      "stores": "HOLDs",
+      "evaluation_window": "10 steps",
+      "threshold": ">0.3% price movement",
+      "penalty": "Passivity when trend strength >0.6"
+    },
+    "advanced_risk_metrics": {
+      "kelly_criterion": {
+        "range": [0, 0.5],
+        "purpose": "Optimal sizing"
+      },
+      "var_95": {
+        "type": "Value at Risk 95% percentile"
+      },
+      "tail_risk": {
+        "method": "Excess kurtosis detection",
+        "threshold": ">3.0"
+      }
+    }
+  },
+  "environment_config": {
+    "initial_balance": 100000,
+    "currency": "USD",
+    "action_space": {
+      "type": "Discrete",
+      "actions": 3,
+      "values": ["SELL", "HOLD", "BUY"],
+      "alternative": "Continuous Box(2,)"
+    },
+    "observation_space": {
+      "type": "Box",
+      "dimensions": 229,
+      "normalized": true
+    },
+    "data": {
+      "training_period": "2008-2020",
+      "validation_period": "2021",
+      "asset": "XAUUSD",
+      "frequency": "1-hour candles (H1)"
+    },
+    "episode_settings": {
+      "max_steps": 252,
+      "description": "~1 trading month"
+    }
+  },
+  "constants": {
+    "spread_pips": 0.3,
+    "slippage_pips": 0.2,
+    "commission_per_lot": 25,
+    "atr_multiplier": 2.0,
+    "xauusd_contract_size": 100,
+    "xauusd_pip_value": 0.01,
+    "training_mode": true
+  },
+  "callbacks_details": {
+    "checkpoint_evaluation": {
+      "frequency": 50000,
+      "duration": "~10 seconds",
+      "overhead": "<0.1%",
+      "metrics": {
+        "financial": ["Initial Balance", "Final Balance", "Total P&L", "ROI%", "Max Drawdown%"],
+        "trading": ["Number of Trades", "Win Rate", "Profit Factor"],
+        "detailed": ["Entry Price", "Exit Price", "Size", "P&L", "Side"]
+      },
+      "outputs": {
+        "stats_csv": "checkpoint_[steps]_stats.csv",
+        "trades_csv": "checkpoint_[steps]_trades.csv",
+        "ranking_csv": "RANKING.csv",
+        "ranking_txt": "RANKING.txt"
+      },
+      "ranking": {
+        "score_scale": [0, 10],
+        "weighted_metrics": true
+      }
+    },
+    "interpretability": {
+      "frequency": 50000,
+      "format": "Agent interview",
+      "questions": [
+        {
+          "number": 1,
+          "title": "Feature Importance",
+          "method": "Perturbation analysis",
+          "samples": 50
+        },
+        {
+          "number": 2,
+          "title": "Action Patterns",
+          "analyzes": "SELL/HOLD/BUY distribution",
+          "scenarios": 100,
+          "diagnostics": ["Under-trading (>60% HOLD)", "Over-trading (<20% HOLD)"]
+        },
+        {
+          "number": 3,
+          "title": "Market Regime Response",
+          "regimes": ["ranging", "trending", "volatile"],
+          "measures": "Action distribution per regime"
+        },
+        {
+          "number": 4,
+          "title": "Trade Triggers",
+          "examines": ["Market regime", "Drawdown levels", "Position sides"],
+          "identifies": "Trading patterns"
+        },
+        {
+          "number": 5,
+          "title": "Risk Management",
+          "metrics": ["Max Drawdown", "Risk Multiplier", "Kelly Fraction", "VaR 95%"],
+          "assesses": "Defensive positioning"
+        },
+        {
+          "number": 6,
+          "title": "Error Analysis",
+          "evaluates": "Losing trades",
+          "calculates": ["Loss rate", "Severity"],
+          "pinpoints": "Recurring mistakes"
+        }
+      ],
+      "output": "interview_report_[steps].txt"
+    }
+  },
+  "testing": {
+    "smoke_test_mini": {
+      "file": "tests/smoke_test_MINI.py",
+      "duration": "~1 minute",
+      "steps": 100,
+      "objective": "Quick validation",
+      "checks": [
+        "Data Loading",
+        "Environment Creation",
+        "Model Loading (5 fallback paths)",
+        {
+          "name": "Action Distribution",
+          "fail": "Single action >90% (MODE COLLAPSE)",
+          "warning": "Max action >70%",
+          "pass": "≤70% max"
+        },
+        {
+          "name": "Position Management",
+          "requires": "Open AND close positions",
+          "fail": "No opening or no closing"
+        }
+      ],
+      "success_criteria": "Balanced distribution + Active position management"
+    },
+    "smoke_test_full": {
+      "file": "tests/smoke_test_agent7.py",
+      "duration": "~10 minutes",
+      "steps": 1000,
+      "checkpoints": "Every 100 steps (10 total)",
+      "validation_phases": [
+        {
+          "phase": "1/4",
+          "name": "Model Loading",
+          "checks": "Checkpoint/environment compatibility"
+        },
+        {
+          "phase": "2/4",
+          "name": "Action Diversity",
+          "checks": "Same logic as MINI"
+        },
+        {
+          "phase": "3/4",
+          "name": "Position Management",
+          "checks": "Market entry/exit verified"
+        },
+        {
+          "phase": "4/4",
+          "name": "Stability",
+          "checks": "No crash during 1000 steps"
+        }
+      ],
+      "success_message": "Agent ready for full training/evaluation"
+    }
+  },
+  "shap_analysis": {
+    "file": "analysis/explain_shap_agent7.py",
+    "scope": {
+      "features": 222,
+      "actions": 3,
+      "action_types": ["SELL", "HOLD", "BUY"]
+    },
+    "samples": 500,
+    "background_dataset": 100,
+    "method": {
+      "explainer": "shap.KernelExplainer",
+      "prediction_function": "PPO policy network probabilities → (N, 3)"
+    },
+    "importance_calculation": {
+      "metric": "Mean Absolute SHAP values per feature",
+      "cumulative": ["Top-5", "Top-10"]
+    },
+    "detection": {
+      "mode_collapse": {
+        "threshold": ">80%",
+        "description": "Single action dominance"
+      },
+      "cancellation_effects": {
+        "identifies": "Feature pairs with opposite SHAP signs"
+      }
+    },
+    "visualizations": [
+      {
+        "file": "shap_global_importance.png",
+        "description": "Top 20 features by mean abs SHAP"
+      },
+      {
+        "file": "shap_summary_plot.png",
+        "description": "Distribution 222 features (top 30 shown)"
+      },
+      {
+        "file": "shap_waterfall_SELL.png",
+        "description": "Breakdown best SELL decision"
+      },
+      {
+        "file": "shap_waterfall_BUY.png",
+        "description": "Breakdown best BUY decision"
+      },
+      {
+        "file": "shap_report.txt",
+        "description": "Complete text report + diagnostics"
+      }
+    ]
+  },
+  "performance_targets": {
+    "sharpe_ratio": {
+      "target": "≥2.5",
+      "priority": "critical"
+    },
+    "max_drawdown": {
+      "target": "<6%",
+      "priority": "critical",
+      "compliance": "FTMO"
+    },
+    "roi": {
+      "target": "18-22%",
+      "priority": "critical"
+    },
+    "win_rate": {
+      "target": ">50%",
+      "priority": "high"
+    },
+    "profit_factor": {
+      "target": "≥1.5",
+      "priority": "high"
+    },
+    "action_balance": {
+      "target": "20-40% HOLD",
+      "priority": "medium",
+      "purpose": "Avoid mode collapse"
+    },
+    "critic_std": {
+      "target": ">1.0",
+      "priority": "critical",
+      "purpose": "Learning health indicator"
+    }
+  },
+  "version_history": {
+    "v2_1": {
+      "name": "CRITIC BOOST + LSTM",
+      "status": "current",
+      "problem_solved": "Critic Flat (Std 1.0→0.05)",
+      "major_changes": [
+        {
+          "change": "Value Coefficient",
+          "from": 0.25,
+          "to": 1.0,
+          "improvement": "4x boost"
+        },
+        {
+          "change": "Epochs",
+          "from": 15,
+          "to": 25,
+          "improvement": "+67%"
+        },
+        {
+          "change": "Memory Features",
+          "added": 7,
+          "list": ["Win rate", "Streaks", "Avg PnL", "Best/Worst trade", "Win/Loss count"]
+        },
+        {
+          "change": "Entropy",
+          "type": "Adaptive schedule",
+          "range": "0.20→0.05"
+        },
+        {
+          "change": "Architecture",
+          "improvement": "Separate independent Actor/Critic"
+        }
+      ],
+      "expected_result": "Critic Std >1.0 stable, healthy convergence"
+    },
+    "v2_0": {
+      "name": "Previous version",
+      "status": "deprecated",
+      "problem": "Critic Flat - Std fell to 0.05",
+      "cause": ["Value coefficient too low (0.25)", "Missing memory features"]
+    }
+  },
+  "modification_workflow": {
+    "steps": [
+      {
+        "step": 1,
+        "action": "Read file from GitHub",
+        "tool": "WebFetch raw URL"
+      },
+      {
+        "step": 2,
+        "action": "Identify section to modify",
+        "method": "Analyze code structure"
+      },
+      {
+        "step": 3,
+        "action": "Apply precise modification",
+        "rule": "Preserve existing architecture"
+      },
+      {
+        "step": 4,
+        "action": "Save modified version",
+        "rule": "SAME file, no duplication"
+      },
+      {
+        "step": 5,
+        "action": "Document change",
+        "method": "Detailed commit message"
+      }
+    ],
+    "forbidden": [
+      "Creating new file versions",
+      "Duplicating existing files",
+      "Working on local copies instead of GitHub",
+      "Breaking FTMO compatibility",
+      "Modifying 229 features count without documentation"
+    ]
+  },
+  "resources": {
+    "repository": "https://github.com/tradingluca31-boop/AGENT-7-UNIQUEMENT",
+    "algorithm_library": "Stable-Baselines3",
+    "algorithm": "RecurrentPPO",
+    "policy": "MlpLstmPolicy",
+    "shap_methodology": "A Unified Approach to Interpreting Model Predictions"
+  }
+}
