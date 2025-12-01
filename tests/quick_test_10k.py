@@ -118,7 +118,6 @@ env = GoldTradingEnv(
     prices_df=prices,
     initial_balance=100_000,
     action_space_type='discrete',
-    agent_id=7,
     verbose=False
 )
 env = Monitor(env)
