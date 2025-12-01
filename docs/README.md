@@ -82,18 +82,23 @@ pip install stable-baselines3 sb3-contrib gymnasium numpy pandas tensorboard sha
 ### Training (500K steps test - 2h)
 
 ```bash
-python train_CRITIC_BOOST_LSTM.py
+python training/train_CRITIC_BOOST_LSTM.py
 ```
 
 Or use the launcher:
 ```bash
-LAUNCH_TRAINING_500K.bat
+launchers/LAUNCH_TRAINING_500K.bat
 ```
 
 ### Smoke Test (1 minute)
 
 ```bash
-python smoke_test_MINI.py
+python tests/smoke_test_MINI.py
+```
+
+Or use the launcher:
+```bash
+launchers/RUN_SMOKE_TEST_MINI.bat
 ```
 
 ### TensorBoard Monitoring
@@ -104,24 +109,45 @@ tensorboard --logdir C:\Users\lbye3\Desktop\GoldRL\output\logs\agent7_critic_boo
 
 ---
 
-## Project Structure
+## Project Structure (Organized - 2025-12-01)
 
 ```
 FICHIER IMPORTANT AGENT 7/
-├── train_CRITIC_BOOST_LSTM.py          # Main training script
-├── trading_env_v2_ultimate.py          # RL environment (229 features)
-├── CheckpointEvaluationCallback.py     # Auto-save CSV every 50K
-├── InterpretabilityCallback.py         # Auto-interview every 50K
-├── explain_shap_agent7.py              # SHAP feature importance
-├── smoke_test_MINI.py                  # Quick test (100 steps)
-├── smoke_test_agent7.py                # Full test (1000 steps)
-├── LAUNCH_TRAINING_500K.bat            # Training launcher
-├── RUN_SMOKE_TEST_MINI.bat             # Smoke test launcher
-├── README_V2.1_CRITIC_BOOST_LSTM.md    # Detailed documentation
-├── INDEX_AGENT7_FILES.txt              # File descriptions
-├── QUICK_START.txt                     # Quick start guide
-└── VERIFICATION_COMPLETE.txt           # Verification report
+├── training/                           # Training scripts
+│   └── train_CRITIC_BOOST_LSTM.py      # Main training (RecurrentPPO+LSTM)
+├── environment/                        # RL Environment
+│   └── trading_env_v2_ultimate.py      # 229 features, FTMO compliant
+├── callbacks/                          # Training callbacks
+│   ├── CheckpointEvaluationCallback.py # Auto-save CSV every 50K
+│   └── InterpretabilityCallback.py     # Auto-interview every 50K
+├── analysis/                           # Post-training analysis
+│   └── explain_shap_agent7.py          # SHAP feature importance
+├── tests/                              # Smoke tests
+│   ├── smoke_test_MINI.py              # Quick test (100 steps, 1 min)
+│   └── smoke_test_agent7.py            # Full test (1000 steps, 10 min)
+├── launchers/                          # Batch launchers
+│   ├── LAUNCH_TRAINING_500K.bat        # Training launcher
+│   └── RUN_SMOKE_TEST_MINI.bat         # Smoke test launcher
+├── docs/                               # Documentation
+│   ├── README.md                       # This file
+│   ├── README_V2.1_CRITIC_BOOST_LSTM.md# Technical documentation
+│   ├── CLAUDE_CODE_REFERENCE.md        # Reference for Claude Code
+│   ├── CHANGELOG_2025-12-01.md         # Change history
+│   ├── AGENT_7_CONFIG.json             # Full configuration JSON
+│   ├── INDEX_AGENT7_FILES.txt          # File descriptions
+│   ├── QUICK_START.txt                 # Quick start guide
+│   └── VERIFICATION_COMPLETE.txt       # Verification report
+└── .gitignore                          # Git ignore rules
 ```
+
+### Key Files for Claude Code
+
+| Priority | File | Purpose |
+|----------|------|---------|
+| 1 | `docs/CLAUDE_CODE_REFERENCE.md` | **READ FIRST** - All rules & config |
+| 2 | `docs/AGENT_7_CONFIG.json` | Complete configuration |
+| 3 | `training/train_CRITIC_BOOST_LSTM.py` | Main training script |
+| 4 | `environment/trading_env_v2_ultimate.py` | RL environment |
 
 ---
 
@@ -290,6 +316,7 @@ For questions or collaboration: [Your contact info]
 
 ---
 
-*Last updated: 2025-11-25*
+*Last updated: 2025-12-01*
 *Version: 2.1 CRITIC BOOST + LSTM*
+*Structure: Organized with subdirectories*
 *Author: Claude Code + Human Expert*
