@@ -58,19 +58,27 @@ class TradingMonitorCallback(BaseCallback):
         self.last_position = 0
 
     def _on_step(self) -> bool:
-        # Get action from info
-        if 'action' in self.locals:
+        # Get action from locals (key is 'actions' not 'action')
+        if 'actions' in self.locals:
             action = self.locals['actions'][0]
-            self.actions.append(action)
+            self.actions.append(int(action))
 
-        # Check for position changes
-        if hasattr(self.training_env.envs[0], 'position'):
-            current_position = self.training_env.envs[0].position
-            if self.last_position == 0 and current_position != 0:
-                self.trades_opened += 1
-            elif self.last_position != 0 and current_position == 0:
-                self.trades_closed += 1
-            self.last_position = current_position
+        # Check for position changes via environment
+        try:
+            # Access the unwrapped environment
+            env = self.training_env.envs[0]
+            while hasattr(env, 'env'):
+                env = env.env
+
+            if hasattr(env, 'position_side'):
+                current_position = env.position_side
+                if self.last_position == 0 and current_position != 0:
+                    self.trades_opened += 1
+                elif self.last_position != 0 and current_position == 0:
+                    self.trades_closed += 1
+                self.last_position = current_position
+        except:
+            pass
 
         # Print progress every 2000 steps
         if self.num_timesteps % 2000 == 0:
