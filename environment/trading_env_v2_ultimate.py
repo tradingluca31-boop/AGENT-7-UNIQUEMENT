@@ -105,7 +105,7 @@ class GoldTradingEnv(gym.Env):
 
         # Observation space: Base features + RL features
         n_base_features = self.features_df.shape[1]  # 209 (all features)
-        n_rl_features = 13  # 3 (last_action) + 1 (regret) + 1 (duration) + 1 (pnl_ratio) + 3 (regime) + 1 (hours) + 1 (vol) + 1 (position_side) + 1 (trade_similarity)
+        n_rl_features = 20  # 13 RL + 7 MEMORY: 3 (last_action) + 1 (regret) + 1 (duration) + 1 (pnl_ratio) + 3 (regime) + 1 (hours) + 1 (vol) + 1 (position_side) + 1 (trade_similarity) + 7 (MEMORY: win_rate, streak, avg_pnl, best, worst, win_count, loss_count)
         n_total_features = n_base_features + n_rl_features
 
         self.observation_space = spaces.Box(
