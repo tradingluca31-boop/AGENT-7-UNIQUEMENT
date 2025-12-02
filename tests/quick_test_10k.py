@@ -147,7 +147,7 @@ model = RecurrentPPO(
     gamma=0.95,
     gae_lambda=0.95,
     clip_range=0.2,
-    ent_coef=0.20,  # HIGH entropy for exploration
+    ent_coef=0.25,  # V2: VERY HIGH entropy (0.25) for maximum exploration
     vf_coef=1.0,    # CRITIC BOOST
     max_grad_norm=0.5,
     policy_kwargs=dict(
@@ -158,7 +158,7 @@ model = RecurrentPPO(
     ),
     verbose=0
 )
-print("   [OK] Model created with HIGH entropy (0.20) for exploration")
+print("   [OK] Model created with VERY HIGH entropy (0.25) for maximum exploration")
 
 # ============================================================================
 # 4. TRAIN 10K STEPS

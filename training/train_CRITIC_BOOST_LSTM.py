@@ -93,12 +93,20 @@ print("="*80)
 
 class AdaptiveEntropyCallback(BaseCallback):
     """
-    Adaptive Entropy Coefficient (HEDGE FUND STANDARD)
+    Adaptive Entropy Coefficient V2 (FIXED FOR MORE TRADES)
 
-    Schedule:
-    - 0-150K steps (0-30%): ent_coef = 0.20 (HIGH exploration)
-    - 150K-350K (30-70%): ent_coef decays 0.20 → 0.05 (exploration → exploitation)
-    - 350K-500K (70-100%): ent_coef = 0.05 (LOW exploration, pure exploitation)
+    Schedule V2 (EXTENDED EXPLORATION):
+    - 0-250K steps (0-50%): ent_coef = 0.25 (VERY HIGH exploration) ← EXTENDED!
+    - 250K-400K (50-80%): ent_coef decays 0.25 → 0.12 (LINEAR, not exponential)
+    - 400K-500K (80-100%): ent_coef = 0.12 (HIGHER minimum) ← Was 0.05!
+
+    CHANGES FROM V1:
+    - Extended high entropy phase: 30% → 50%
+    - Higher initial entropy: 0.20 → 0.25
+    - Higher minimum entropy: 0.05 → 0.12
+    - Linear decay instead of exponential (smoother)
+
+    Why: V1 caused mode collapse after 150K steps due to aggressive entropy decay.
 
     Used by: Renaissance Technologies (Medallion Fund)
     Paper: Haarnoja et al. (2018) "Soft Actor-Critic"
@@ -110,26 +118,33 @@ class AdaptiveEntropyCallback(BaseCallback):
     def _on_step(self) -> bool:
         progress = self.num_timesteps / self.total_timesteps
 
-        # Phase 1: High exploration (0-30%)
-        if progress < 0.30:
-            new_ent = 0.20
+        # Phase 1: VERY HIGH exploration (0-50%) ← EXTENDED from 30%
+        if progress < 0.50:
+            new_ent = 0.25  # Higher than before (was 0.20)
 
-        # Phase 2: Exponential decay (30-70%)
-        elif progress < 0.70:
-            decay_progress = (progress - 0.30) / 0.40  # Normalize to [0, 1]
-            new_ent = 0.20 * np.exp(-2.5 * decay_progress)  # Exponential decay
+        # Phase 2: LINEAR decay (50-80%) ← Changed from exponential
+        elif progress < 0.80:
+            decay_progress = (progress - 0.50) / 0.30  # Normalize to [0, 1]
+            # Linear decay from 0.25 to 0.12
+            new_ent = 0.25 - (0.25 - 0.12) * decay_progress
 
-        # Phase 3: Low exploration (70-100%)
+        # Phase 3: HIGHER minimum exploration (80-100%)
         else:
-            new_ent = 0.05
+            new_ent = 0.12  # Higher than before (was 0.05)
 
         # Update model
         self.model.ent_coef = new_ent
 
         # Log every 50K steps
         if self.num_timesteps % 50_000 == 0 and self.verbose:
-            print(f"\n[ADAPTIVE ENTROPY] Step {self.num_timesteps:,}/{self.total_timesteps:,} ({progress:.1%})")
+            print(f"\n[ADAPTIVE ENTROPY V2] Step {self.num_timesteps:,}/{self.total_timesteps:,} ({progress:.1%})")
             print(f"   Entropy coefficient: {new_ent:.4f}")
+            if progress < 0.50:
+                print(f"   Phase: HIGH EXPLORATION (maintaining diversity)")
+            elif progress < 0.80:
+                print(f"   Phase: LINEAR DECAY (gradual exploitation)")
+            else:
+                print(f"   Phase: MODERATE EXPLORATION (avoiding collapse)")
 
         return True
 
@@ -392,7 +407,7 @@ model = RecurrentPPO(
     gamma=0.9549945651081264,
     gae_lambda=0.95,  # BOOST: 0.9576 → 0.95 (moins de variance)
     clip_range=0.2,  # KL constraint (Citadel style)
-    ent_coef=0.20,  # START HIGH - will be adapted by callback
+    ent_coef=0.25,  # V2: START VERY HIGH (0.25) - adapted by AdaptiveEntropyCallback V2
     vf_coef=1.0,  # BOOST: 0.25 → 1.0 (MAXIMUM Critic learning)
     max_grad_norm=0.5,
     policy_kwargs={

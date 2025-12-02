@@ -1629,14 +1629,37 @@ class GoldTradingEnv(gym.Env):
 
         tier3_reward = 0.0
 
-        # 3.1 Unified Diversity Score - REMOVED (Wall Street fix)
-        # ANCIEN: Force 33/33/33 distribution artificielle
-        # NOUVEAU: ent_coef=0.20 + confidence threshold font le travail
-        # L'agent trade selon sa CONVICTION, pas pour "diversifier"
-        # diversity_reward = (diversity_score - 0.5) * 1.0  # SUPPRIMÉ
-        # tier3_reward += diversity_reward  # SUPPRIMÉ
+        # 3.1 EXPLORATION BONUS - Encourage BUY/SELL actions (FIX MODE COLLAPSE)
+        # L'agent reçoit un petit bonus pour chaque action de trading (pas HOLD)
+        # Cela l'encourage à explorer et trader au lieu de rester passif
+        if self.last_action in [0, 2]:  # SELL or BUY
+            tier3_reward += 0.03  # Small but consistent bonus for trading
+            self.log(f"   [BONUS] +0.03 for trading action")
 
-        # 3.2 V2 Bonuses (direction, profit taking, etc.) (5%)
+        # 3.2 HOLD PENALTY - Penalize excessive HOLD (FIX MODE COLLAPSE)
+        # Si l'agent fait trop de HOLD consécutifs, il est pénalisé
+        # Cela évite le mode collapse vers 100% HOLD
+        if self.consecutive_holds > 30:  # More than 30 consecutive HOLDs
+            hold_penalty = -0.02 * min((self.consecutive_holds - 30) / 50, 1.0)
+            tier3_reward += hold_penalty
+            if self.consecutive_holds % 50 == 0:
+                self.log(f"   [PENALTY] {hold_penalty:.4f} for {self.consecutive_holds} consecutive HOLDs")
+
+        # 3.3 DIVERSITY ENCOURAGEMENT - Bonus for balanced action distribution
+        # Si les 100 dernières actions sont bien réparties, bonus
+        if len(self.recent_actions) >= 50:
+            action_counts = {}
+            for a in self.recent_actions:
+                action_counts[a] = action_counts.get(a, 0) + 1
+            total = sum(action_counts.values())
+            max_pct = max(action_counts.values()) / total if total > 0 else 1.0
+
+            if max_pct < 0.60:  # Good diversity
+                tier3_reward += 0.02
+            elif max_pct > 0.90:  # Mode collapse warning
+                tier3_reward -= 0.03  # Strong penalty
+
+        # 3.4 V2 Bonuses (direction, profit taking, etc.) (5%)
         tier3_reward += 0.05 * v2_bonus
 
         # ========================================================================
